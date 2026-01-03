@@ -1,70 +1,250 @@
-# Getting Started with Create React App
+# 🎓 Faculty Workload Management System
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A comprehensive web application for managing and analyzing faculty workload distribution across departments. Built with React, Flask, and Google Sheets integration.
 
-## Available Scripts
+## 📋 Features
 
-In the project directory, you can run:
+- **📊 Dashboard Overview** - Real-time statistics and workload distribution visualization
+- **📈 Interactive Charts** - Bar charts for faculty workload comparison
+- **🔥 Department Heatmap** - Visual representation of departmental workload levels
+- **👥 Faculty Details** - Comprehensive table view of all faculty assignments
+- **🤖 AI Insights** - Intelligent recommendations for workload balancing
+- **📄 PDF Export** - Generate professional reports with one click
+- **🔄 Live Data Sync** - Automatic updates from Google Forms submissions
+- **🎨 Professional UI** - Light green theme with institutional design
+- **📱 Responsive Design** - Works on desktop and tablet devices
+- **🔍 Advanced Filtering** - Filter by department, data type, and faculty name
 
-### `npm start`
+## 🏗️ Project Structure
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+```
+Faculty/
+├── backend/                    # Flask API Server
+│   ├── app.py                 # Main Flask application with PDF export
+│   ├── requirements.txt        # Python dependencies
+│   └── workload_utils.py       # Utility functions for data processing
+├── frontend/                   # React Application
+│   ├── src/
+│   │   ├── api/
+│   │   │   └── api.js         # API client for backend communication
+│   │   ├── components/        # React components
+│   │   │   ├── Navigation.js
+│   │   │   ├── Overview.js
+│   │   │   ├── FacultyTable.js
+│   │   │   ├── DepartmentHeatmap.js
+│   │   │   ├── WorkloadChart.js
+│   │   │   └── Insights.js
+│   │   ├── App.js            # Main app component
+│   │   ├── App_new.css       # Main styling (light green theme)
+│   │   └── index.js          # React entry point
+│   └── package.json          # Node dependencies
+├── Complete_AppScript.gs      # Google Apps Script for data processing
+├── AUTO_REFRESH_GUIDE.md      # Guide for form data auto-refresh
+└── PDF_EXPORT_SETUP.md        # PDF export feature documentation
+```
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## 🚀 Quick Start
 
-### `npm test`
+### Prerequisites
+- Python 3.8+
+- Node.js 14+
+- Google Account with Google Sheets and Forms
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Installation
 
-### `npm run build`
+**1. Clone or download the project**
+```bash
+cd Faculty
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+**2. Setup Backend**
+```bash
+cd backend
+pip install -r requirements.txt
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+**3. Setup Frontend**
+```bash
+cd frontend
+npm install
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### Running the Application
 
-### `npm run eject`
+**Terminal 1 - Backend (Port 5000)**
+```bash
+cd backend
+python app.py
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+You should see:
+```
+* Running on http://127.0.0.1:5000
+* Debug mode: on
+```
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+**Terminal 2 - Frontend (Port 3000)**
+```bash
+cd frontend
+npm start
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+Browser will open automatically at `http://localhost:3000`
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## 🔌 Integration Setup
 
-## Learn More
+### Google Forms Connection
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+1. **Create a Google Form** with faculty workload questions
+2. **Responses automatically go to** a Google Sheet named "Form Responses 1"
+3. **Deploy Google Apps Script**:
+   - Open the spreadsheet
+   - Extensions > Apps Script
+   - Copy `Complete_AppScript.gs` content
+   - Deploy as Web App (Anyone access)
+   - Copy the deployment URL
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+4. **Update Backend Configuration**:
+   - Open `backend/app.py`
+   - Replace line 8: `APPS_SCRIPT_URL` with your deployment URL
 
-### Code Splitting
+## 📊 Dashboard Views
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+### 1. Overview Dashboard
+- Total faculty count
+- Department statistics
+- Average workload score
+- Workload distribution (Overloaded/Balanced/Underutilized)
 
-### Analyzing the Bundle Size
+### 2. Faculty Workload
+- Filterable table of all faculty assignments
+- Search by faculty name or subject
+- Filter by department
+- Interactive bar chart visualization
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+### 3. Department Heatmap
+- Color-coded department workload levels
+- Faculty count per department
+- Average workload per department
+- Status breakdown (Overloaded/Balanced/Underutilized)
 
-### Making a Progressive Web App
+### 4. Faculty Detail
+- Detailed table with all assignment information
+- Teaching hours, lab hours
+- Workload scores and status
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+### 5. AI Recommendations
+- Intelligent insights about workload distribution
+- Specific recommendations for improvement
+- Risk analysis and concerns
 
-### Advanced Configuration
+### 6. Reports
+- **Export as PDF** - Download professional reports
+- **Refresh Data** - Force update from Google Forms
+- Includes summary statistics and detailed tables
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+## 🔄 Data Flow
 
-### Deployment
+```
+Google Forms
+    ↓
+Google Sheet (Form Responses 1)
+    ↓
+Google Apps Script (Complete_AppScript.gs)
+    ↓
+Flask Backend (http://localhost:5000/api/workload)
+    ↓
+React Frontend (http://localhost:3000)
+    ↓
+User Interface
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+## 📚 API Endpoints
 
-### `npm run build` fails to minify
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/workload` | GET | Fetch all faculty workload data |
+| `/api/insights` | GET | Get AI-powered insights |
+| `/api/export-pdf` | POST | Generate and download PDF report |
+| `/api/health` | GET | Health check endpoint |
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+## 🎨 Technology Stack
+
+**Frontend:**
+- React 19
+- Chart.js 4.5 (data visualization)
+- Axios (HTTP client)
+- CSS3 (light green theme)
+
+**Backend:**
+- Flask 2.3
+- Flask-CORS (cross-origin support)
+- ReportLab (PDF generation)
+- Python 3.8+
+
+**Data Source:**
+- Google Sheets
+- Google Forms
+- Google Apps Script
+
+## 🎯 Workload Calculation
+
+The system calculates workload using the formula:
+```
+Workload Score = (Teaching Hours × 1.0) + (Lab Hours × 1.5) + Evaluation Weight
+```
+
+Evaluation weights:
+- Low: 1 point
+- Medium: 2 points
+- High: 3 points
+
+**Status Classification:**
+- **Overloaded**: Faculty workload > 120% of department average
+- **Balanced**: Faculty workload between 80-120% of department average
+- **Underutilized**: Faculty workload < 80% of department average
+
+## 📖 Documentation
+
+- **[AUTO_REFRESH_GUIDE.md](./AUTO_REFRESH_GUIDE.md)** - How to verify form data auto-refresh
+- **[PDF_EXPORT_SETUP.md](./PDF_EXPORT_SETUP.md)** - PDF export feature setup
+
+## 🎨 Customization
+
+### Change Color Theme
+Edit color variables in `frontend/src/components/Navigation.css` and `frontend/src/App_new.css`
+
+### Modify Workload Calculation
+Edit `backend/workload_utils.py` - `calculate_workload()` function
+
+### Add Custom Fields
+Update the Google Form and modify `Complete_AppScript.gs` to process new fields
+
+## 🐛 Troubleshooting
+
+### Data Not Loading
+1. Verify Google Apps Script URL is correct in `app.py`
+2. Check that Apps Script deployment is public (Anyone access)
+3. Ensure "Form Responses 1" sheet exists and has data
+
+### Backend Won't Start
+```bash
+pip install --upgrade flask flask-cors reportlab
+```
+
+### Frontend Won't Connect to Backend
+1. Verify backend is running on port 5000
+2. Check browser console for CORS errors (F12)
+3. Verify API URL in `frontend/src/api/api.js`
+
+## 📝 License
+
+This project is designed for institutional use in managing faculty workload.
+
+## 👥 Author
+
+Created as an academic resource management tool for educational institutions.
+
+---
+
+**Need Help?** Check the documentation files or refer to the setup guides included in the project.
