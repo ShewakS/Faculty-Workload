@@ -105,11 +105,39 @@ function App() {
       case 'recommendations':
         return <Insights />;
       case 'reports':
+        const handleExportPDF = async () => {
+          try {
+            const response = await fetch('http://localhost:5000/api/export-pdf', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(filteredData)
+            });
+            
+            if (response.ok) {
+              const blob = await response.blob();
+              const url = window.URL.createObjectURL(blob);
+              const link = document.createElement('a');
+              link.href = url;
+              link.setAttribute('download', `Faculty_Workload_Report_${new Date().toISOString().split('T')[0]}.pdf`);
+              document.body.appendChild(link);
+              link.click();
+              link.parentNode.removeChild(link);
+            } else {
+              alert('Failed to generate PDF');
+            }
+          } catch (error) {
+            console.error('Error exporting PDF:', error);
+            alert('Error exporting PDF: ' + error.message);
+          }
+        };
+        
         return (
           <div className="reports">
             <h2>📋 Reports</h2>
             <div className="report-actions">
-              <button onClick={() => window.print()}>Print Report</button>
+              <button onClick={handleExportPDF}>Export as PDF</button>
               <button onClick={loadData}>Refresh Data</button>
             </div>
             <WorkloadChart data={filteredData} />

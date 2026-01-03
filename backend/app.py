@@ -1,6 +1,15 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, send_file
 from flask_cors import CORS
 import requests
+import json
+from datetime import datetime
+from reportlab.lib.pagesizes import letter, A4
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch
+from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
+from reportlab.lib import colors
+from io import BytesIO
 
 app = Flask(__name__)
 CORS(app)
@@ -119,6 +128,136 @@ def get_insights():
         return jsonify(data)
     except Exception as e:
         return jsonify({"summary": "No insights available", "recommendations": []})
+
+@app.route('/api/export-pdf', methods=['POST'])
+def export_pdf():
+    """Export workload data as PDF"""
+    try:
+        from flask import request
+        data = request.get_json()
+        
+        if not data:
+            data = get_mock_data()
+        
+        # Create PDF
+        pdf_buffer = BytesIO()
+        doc = SimpleDocTemplate(pdf_buffer, pagesize=letter,
+                                rightMargin=0.5*inch,
+                                leftMargin=0.5*inch,
+                                topMargin=0.5*inch,
+                                bottomMargin=0.5*inch)
+        
+        elements = []
+        styles = getSampleStyleSheet()
+        
+        # Title
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=24,
+            textColor=colors.HexColor('#354f52'),
+            spaceAfter=10,
+            alignment=TA_CENTER,
+            fontName='Helvetica-Bold'
+        )
+        elements.append(Paragraph('Faculty Workload Management Report', title_style))
+        
+        # Date
+        date_text = f"Report Generated: {datetime.now().strftime('%B %d, %Y at %I:%M %p')}"
+        date_style = ParagraphStyle(
+            'DateStyle',
+            parent=styles['Normal'],
+            fontSize=10,
+            textColor=colors.HexColor('#718096'),
+            alignment=TA_CENTER,
+            spaceAfter=20
+        )
+        elements.append(Paragraph(date_text, date_style))
+        elements.append(Spacer(1, 0.2*inch))
+        
+        # Summary Statistics
+        if data:
+            total_faculty = len(set(item.get('faculty', '') for item in data))
+            total_depts = len(set(item.get('department', '') for item in data))
+            avg_workload = sum(float(item.get('workload_score', 0)) for item in data) / len(data) if data else 0
+            overloaded_count = len([item for item in data if item.get('status') == 'Overloaded'])
+            balanced_count = len([item for item in data if item.get('status') == 'Balanced'])
+            underutilized_count = len([item for item in data if item.get('status') == 'Underutilized'])
+            
+            summary_style = ParagraphStyle(
+                'SummaryStyle',
+                parent=styles['Heading2'],
+                fontSize=14,
+                textColor=colors.HexColor('#2d3748'),
+                spaceAfter=10,
+                fontName='Helvetica-Bold'
+            )
+            elements.append(Paragraph('Summary Statistics', summary_style))
+            
+            summary_text = f"""Total Faculty: {total_faculty} | Total Departments: {total_depts} | 
+            Average Workload: {avg_workload:.2f}<br/>
+            Overloaded: {overloaded_count} | Balanced: {balanced_count} | Underutilized: {underutilized_count}"""
+            elements.append(Paragraph(summary_text, styles['Normal']))
+            elements.append(Spacer(1, 0.3*inch))
+        
+        # Detailed Table
+        table_title_style = ParagraphStyle(
+            'TableTitle',
+            parent=styles['Heading2'],
+            fontSize=14,
+            textColor=colors.HexColor('#2d3748'),
+            spaceAfter=10,
+            fontName='Helvetica-Bold'
+        )
+        elements.append(Paragraph('Detailed Workload Report', table_title_style))
+        
+        # Create table data
+        table_data = [['Faculty', 'Department', 'Subject', 'Teaching Hrs', 'Lab Hrs', 'Workload Score', 'Status']]
+        
+        for item in data:
+            table_data.append([
+                item.get('faculty', ''),
+                item.get('department', ''),
+                item.get('subject', '')[:20],  # Truncate long names
+                str(item.get('teaching_hours', '0')),
+                str(item.get('lab_hours', '0')),
+                f"{float(item.get('workload_score', 0)):.2f}",
+                item.get('status', '')
+            ])
+        
+        # Create table
+        table = Table(table_data, colWidths=[1.2*inch, 1*inch, 1*inch, 0.9*inch, 0.8*inch, 1*inch, 0.8*inch])
+        
+        # Style table
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#84a98c')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#a8dadc')),
+            ('FONTSIZE', (0, 1), (-1, -1), 9),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f7fafc')]),
+        ]))
+        
+        elements.append(table)
+        
+        # Build PDF
+        doc.build(elements)
+        pdf_buffer.seek(0)
+        
+        return send_file(
+            pdf_buffer,
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name=f'Faculty_Workload_Report_{datetime.now().strftime("%Y-%m-%d")}.pdf'
+        )
+    
+    except Exception as e:
+        print(f"PDF Export error: {str(e)}")
+        return jsonify({"error": f"Failed to generate PDF: {str(e)}"}), 500
 
 @app.route('/api/health', methods=['GET'])
 def health_check():
