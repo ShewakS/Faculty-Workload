@@ -1,0 +1,203 @@
+.overview {
+  padding: 0;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.overview h2 {
+  text-align: center;
+  margin-bottom: 3rem;
+  color: #354f52;
+  font-size: 2.8rem;
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  position: relative;
+  padding-bottom: 1rem;
+}
+
+.overview h2::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 4px;
+  background: linear-gradient(90deg, transparent, #a8dadc, transparent);
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+  margin-bottom: 3.5rem;
+}
+
+.stat-card {
+  background: white;
+  padding: 2.2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  transition: all 0.3s ease;
+  border-top: 4px solid #a8dadc;
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 100px;
+  height: 100px;
+  background: linear-gradient(135deg, rgba(168, 218, 220, 0.15), transparent);
+  border-radius: 0 0 0 100%;
+}
+
+.stat-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 8px 30px rgba(108, 154, 139, 0.12);
+  border-top-color: #84a98c;
+}
+
+.stat-icon {
+  font-size: 3.5rem;
+  opacity: 0.85;
+  filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.stat-info {
+  flex: 1;
+}
+
+.stat-info h3 {
+  margin: 0 0 0.3rem 0;
+  font-size: 3rem;
+  font-weight: 700;
+  color: #52796f;
+  font-family: 'Inter', sans-serif;
+  line-height: 1;
+}
+
+.stat-info p {
+  margin: 0;
+  color: #718096;
+  font-size: 1.05rem;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  font-family: 'Inter', sans-serif;
+}
+
+.status-overview {
+  background: white;
+  padding: 2.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border-top: 4px solid #a8dadc;
+}
+
+.status-overview h3 {
+  text-align: center;
+  margin-bottom: 2.5rem;
+  color: #354f52;
+  font-size: 2rem;
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+}
+
+.status-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 2rem;
+}
+
+.status-card {
+  padding: 2rem 1.5rem;
+  border-radius: 12px;
+  text-align: center;
+  color: white;
+  font-weight: 600;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+.status-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.15), transparent);
+  transition: all 0.5s ease;
+}
+
+.status-card:hover::before {
+  top: -100%;
+  right: -100%;
+}
+
+.status-card:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+.status-card.overloaded {
+  background: linear-gradient(135deg, #c53030 0%, #e53e3e 100%);
+}
+
+.status-card.balanced {
+  background: linear-gradient(135deg, #2f855a 0%, #38a169 100%);
+}
+
+.status-card.underutilized {
+  background: linear-gradient(135deg, #2c5282 0%, #3182ce 100%);
+}
+
+.status-card h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 3rem;
+  font-weight: 700;
+  font-family: 'Inter', sans-serif;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.status-card p {
+  margin: 0;
+  font-size: 1.1rem;
+  opacity: 0.95;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .overview h2 {
+    font-size: 2.2rem;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .stat-card {
+    padding: 1.8rem;
+  }
+
+  .stat-info h3 {
+    font-size: 2.5rem;
+  }
+
+  .status-cards {
+    grid-template-columns: 1fr;
+  }
+}
