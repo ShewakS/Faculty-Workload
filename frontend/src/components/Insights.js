@@ -40,9 +40,13 @@ const Insights = () => {
           <div className="recommendations">
             <h3>Recommendations</h3>
             <ul>
-              {insights.recommendations.map((rec, index) => (
-                <li key={index}>{rec}</li>
-              ))}
+              {insights.recommendations && insights.recommendations.length > 0 ? (
+                insights.recommendations.map((rec, index) => (
+                  <li key={index}>{rec}</li>
+                ))
+              ) : (
+                <li>No recommendations available</li>
+              )}
             </ul>
           </div>
         </div>

@@ -54,16 +54,9 @@ function getWorkloadData() {
 function readSourceData() {
   try {
     const spreadsheet = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
-    let sheet = spreadsheet.getSheetByName(CONFIG.SOURCE_SHEET); // Assumes sheet name 'Form Responses 1' is correct? 
-    // Wait, user might have different sheet name. Default is Form Responses 1.
-    // I should probably warn about that? 
-    // The user's URL had gid=2122912127. 
-    // I can't know the name from GID easily without looking.
-    // But 'Form Responses 1' is standard for Forms.
-    // I will look for standard failure and just return [].
+    let sheet = spreadsheet.getSheetByName(CONFIG.SOURCE_SHEET);
     
     if (!sheet) {
-      // Fallback: try to get the first sheet if specific name fails
       sheet = spreadsheet.getSheets()[0];
     }
     
@@ -72,7 +65,7 @@ function readSourceData() {
       return [];
     }
     
-    const headers = data[0].map(h => h.toString().trim()); // Trim headers
+    const headers = data[0].map(h => h.toString().trim());
     const rows = data.slice(1);
     
     return rows.map(row => {
@@ -82,9 +75,11 @@ function readSourceData() {
       });
       return record;
     }).filter(row => {
-        // Check for faculty name in user's format OR default format
-        const name = row['Name of the Faculty'] || row['Faculty Name'];
-        return name && name.toString().trim();
+      // Filter out empty rows by checking for any faculty name field
+      const possibleNameFields = Object.keys(row).filter(key => 
+        key.toLowerCase().includes('faculty') && key.toLowerCase().includes('name')
+      );
+      return possibleNameFields.some(field => row[field] && row[field].toString().trim());
     });
     
   } catch (error) {
@@ -92,32 +87,78 @@ function readSourceData() {
   }
 }
 
+function createHeaderMapping(headers) {
+  const mapping = {};
+  
+  // Create flexible mapping for common variations
+  headers.forEach(header => {
+    const cleanHeader = header.toLowerCase().trim();
+    
+    // Faculty name variations
+    if (cleanHeader.includes('faculty') && cleanHeader.includes('name')) {
+      mapping.facultyName = header;
+    }
+    // Department variations - exact match first, then flexible
+    if (cleanHeader === 'department') {
+      mapping.department = header;
+    } else if (!mapping.department && (cleanHeader.includes('department') || cleanHeader.includes('dept')) && !cleanHeader.includes('s1') && !cleanHeader.includes('s2') && !cleanHeader.includes('s3') && !cleanHeader.includes('s4')) {
+      mapping.department = header;
+    }
+    
+    // Subject-specific mappings (S1, S2, etc.)
+    for (let i = 1; i <= CONFIG.MAX_SUBJECTS; i++) {
+      const subjectPattern = new RegExp(`s${i}|subject.*${i}`, 'i');
+      const yearPattern = new RegExp(`year.*s${i}|s${i}.*year`, 'i');
+      const sectionPattern = new RegExp(`section.*s${i}|s${i}.*section`, 'i');
+      const teachingPattern = new RegExp(`teaching.*hours.*s${i}|s${i}.*teaching`, 'i');
+      const labPattern = new RegExp(`lab.*hours.*s${i}|s${i}.*lab`, 'i');
+      const evalPattern = new RegExp(`evaluation.*s${i}|s${i}.*evaluation`, 'i');
+      
+      if (subjectPattern.test(cleanHeader) && cleanHeader.includes('name')) {
+        mapping[`subject${i}`] = header;
+      }
+      if (yearPattern.test(cleanHeader)) {
+        mapping[`year${i}`] = header;
+      }
+      if (sectionPattern.test(cleanHeader)) {
+        mapping[`section${i}`] = header;
+      }
+      if (teachingPattern.test(cleanHeader)) {
+        mapping[`teaching${i}`] = header;
+      }
+      if (labPattern.test(cleanHeader)) {
+        mapping[`lab${i}`] = header;
+      }
+      if (evalPattern.test(cleanHeader)) {
+        mapping[`evaluation${i}`] = header;
+      }
+    }
+  });
+  
+  return mapping;
+}
+
 function normalizeWorkloadData(sourceData) {
+  if (!sourceData || sourceData.length === 0) return [];
+  
+  const headers = Object.keys(sourceData[0]);
+  const headerMapping = createHeaderMapping(headers);
   const normalized = [];
   
   sourceData.forEach(row => {
-    // Map main fields with fallbacks
     const baseRecord = {
-      faculty: row['Name of the Faculty'] || row['Faculty Name'],
-      department: row['Department'] || 'Unknown',
-      data_type: row['Data Type'] || 'Real'
+      faculty: row[headerMapping.facultyName] || 'Unknown Faculty',
+      department: row[headerMapping.department] || 'Unknown Department',
+      data_type: 'Real'
     };
     
     for (let i = 1; i <= CONFIG.MAX_SUBJECTS; i++) {
-        // Construct dynamic keys based on user format
-        // Handle potential spacing variations in "Section  Si"
-        let sectionKey = `Section S${i}`;
-        if (row[`Section  S${i}`] !== undefined) sectionKey = `Section  S${i}`;
-        
-        // Map user's specific column names
-        // Pattern: "Subject Name S1", "Year S1", "Teaching hours per week (above-mentioned class S1)"
-        const subjectName = row[`Subject Name S${i}`] || row[`S${i}_Subject_Name`];
-        const year = row[`Year S${i}`] || row[`S${i}_Year`];
-        const section = row[sectionKey] || row[`S${i}_Section`];
-        const teachingHours = row[`Teaching hours per week (above-mentioned class S${i})`] || row[`S${i}_Teaching_Hours`];
-        const labHours = row[`Lab Hours per Week (above-mentioned class S${i})`] || row[`S${i}_Lab_Hours`];
-        const evaluation = row[`Evaluation Workload S${i}`] || row[`S${i}_Evaluation_Load`];
-
+      const subjectName = row[headerMapping[`subject${i}`]];
+      const year = row[headerMapping[`year${i}`]];
+      const section = row[headerMapping[`section${i}`]];
+      const teachingHours = row[headerMapping[`teaching${i}`]];
+      const labHours = row[headerMapping[`lab${i}`]];
+      const evaluation = row[headerMapping[`evaluation${i}`]];
       
       if (subjectName && subjectName.toString().trim()) {
         normalized.push({
@@ -242,10 +283,10 @@ function generateBasicInsights(data) {
 
 function createSampleHeaders(sheet) {
   const headers = [
-    'Timestamp', 'Faculty Name', 'Department', 'Data Type',
-    'S1_Subject_Name', 'S1_Year', 'S1_Section', 'S1_Teaching_Hours', 'S1_Lab_Hours', 'S1_Evaluation_Load',
-    'S2_Subject_Name', 'S2_Year', 'S2_Section', 'S2_Teaching_Hours', 'S2_Lab_Hours', 'S2_Evaluation_Load',
-    'S3_Subject_Name', 'S3_Year', 'S3_Section', 'S3_Teaching_Hours', 'S3_Lab_Hours', 'S3_Evaluation_Load'
+    'Timestamp', 'Name of the Faculty', 'Department',
+    'Subject Name S1', 'Year S1', 'Section S1', 'Teaching hours per week (above-mentioned class S1)', 'Lab Hours per Week (above-mentioned class S1)', 'Evaluation Workload S1',
+    'Subject Name S2', 'Year S2', 'Section S2', 'Teaching hours per week (above-mentioned class S2)', 'Lab Hours per Week (above-mentioned class S2)', 'Evaluation Workload S2',
+    'Subject Name S3', 'Year S3', 'Section S3', 'Teaching hours per week (above-mentioned class S3)', 'Lab Hours per Week (above-mentioned class S3)', 'Evaluation Workload S3'
   ];
   sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
 }
@@ -264,19 +305,19 @@ function addSampleData() {
     
     const sampleData = [
       [
-        new Date(), 'Dr. Alice Smith', 'Computer Science', 'Demo',
+        new Date(), 'Dr. Alice Smith', 'Computer Science',
         'Data Structures', '2nd Year', 'A', 6, 2, 'High',
         'Algorithms', '3rd Year', 'B', 4, 0, 'Medium',
         'Database Systems', '3rd Year', 'A', 4, 2, 'High'
       ],
       [
-        new Date(), 'Prof. Bob Johnson', 'Computer Science', 'Demo',
+        new Date(), 'Prof. Bob Johnson', 'Computer Science',
         'Operating Systems', '3rd Year', 'A', 6, 3, 'High',
         'Computer Networks', '4th Year', 'B', 4, 2, 'Medium',
         '', '', '', '', '', ''
       ],
       [
-        new Date(), 'Dr. Carol Davis', 'Mathematics', 'Demo',
+        new Date(), 'Dr. Carol Davis', 'Mathematics',
         'Calculus I', '1st Year', 'A', 8, 0, 'High',
         'Linear Algebra', '2nd Year', 'B', 6, 0, 'Medium',
         'Statistics', '3rd Year', 'A', 4, 1, 'Low'
@@ -292,6 +333,9 @@ function addSampleData() {
   }
 }
 
+function myFunction() {
+  console.log('Test function works');
+}
 function myFunction() {
   console.log('Test function works');
 }

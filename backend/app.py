@@ -6,16 +6,28 @@ app = Flask(__name__)
 CORS(app)
 
 # Replace this with your actual web app URL from deployment
-APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzSA9uAJKbWCmMDgQ5YcEsmHzS3mtmVigrYfA2WQtBId4gW8roZNBSaFtv5_MqBVfWrrg/exec"
+APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzOokk5_uj_EDTWNShc4Kjs4ccuBqGQOO9s11EP8X-681aX97Yd7ezTKG_YumhrKo3JPQ/exec"
 
 def fetch_from_apps_script(action):
     """Fetch data from Google Apps Script"""
     try:
-        response = requests.get(f"{APPS_SCRIPT_URL}?action={action}")
+        response = requests.get(f"{APPS_SCRIPT_URL}?action={action}", timeout=30)
+        print(f"Response status: {response.status_code}")
+        print(f"Response content: {response.text[:200]}...")
+        
+        if response.status_code != 200:
+            return {"error": f"HTTP {response.status_code}: {response.text}"}
+            
+        if not response.text.strip():
+            return {"error": "Empty response from Apps Script"}
+            
         return response.json()
+    except requests.exceptions.Timeout:
+        return {"error": "Apps Script timeout"}
+    except ValueError as e:
+        return {"error": f"Invalid JSON response: {response.text[:100]}"}
     except Exception as e:
-        print(f"Error fetching from Apps Script: {e}")
-        return {"error": str(e)}
+        return {"error": f"Network error: {str(e)}"}
 
 @app.route('/api/workload', methods=['GET'])
 def get_workload_data():
@@ -23,14 +35,14 @@ def get_workload_data():
     try:
         data = fetch_from_apps_script('workload')
         
-        # Check if Apps Script returned the specific no data error
-        if isinstance(data, dict) and "No data found in spreadsheet" in data.get("error", ""):
-            print("Apps Script returned no data. Serving mock data.")
+        if isinstance(data, dict) and "error" in data:
+            print(f"Apps Script error: {data['error']}")
             return jsonify(get_mock_data())
             
         return jsonify(data)
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        print(f"API error: {str(e)}")
+        return jsonify(get_mock_data())
 
 def get_mock_data():
     """Return mock data when spreadsheet is empty"""
@@ -102,9 +114,11 @@ def get_insights():
     """AI insights endpoint"""
     try:
         data = fetch_from_apps_script('insights')
+        if isinstance(data, dict) and "error" in data:
+            return jsonify({"summary": "No insights available", "recommendations": []})
         return jsonify(data)
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"summary": "No insights available", "recommendations": []})
 
 @app.route('/api/health', methods=['GET'])
 def health_check():
