@@ -15,7 +15,6 @@ function App() {
   const [error, setError] = useState(null);
   const [filters, setFilters] = useState({
     department: 'All',
-    dataType: 'All',
     searchTerm: ''
   });
 
@@ -48,11 +47,10 @@ function App() {
 
   const filteredData = Array.isArray(workloadData) ? workloadData.filter(item => {
     const matchesDept = filters.department === 'All' || item.department === filters.department;
-    const matchesType = filters.dataType === 'All' || item.data_type === filters.dataType;
     const matchesSearch = !filters.searchTerm || 
       item.faculty.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
       item.subject.toLowerCase().includes(filters.searchTerm.toLowerCase());
-    return matchesDept && matchesType && matchesSearch;
+    return matchesDept && matchesSearch;
   }) : [];
 
   const departments = Array.isArray(workloadData) ? 
@@ -85,14 +83,6 @@ function App() {
                   <option key={dept} value={dept}>{dept}</option>
                 ))}
               </select>
-              <select 
-                value={filters.dataType} 
-                onChange={(e) => setFilters({...filters, dataType: e.target.value})}
-              >
-                <option value="All">All Data Types</option>
-                <option value="Demo">Demo</option>
-                <option value="Real">Real</option>
-              </select>
             </div>
             <WorkloadChart data={filteredData} />
             <FacultyTable data={filteredData} />
@@ -101,7 +91,30 @@ function App() {
       case 'heatmap':
         return <DepartmentHeatmap />;
       case 'faculty-detail':
-        return <FacultyTable data={filteredData} />;
+        return (
+          <div className="faculty-detail-section">
+            <h2>👥 Faculty Detail</h2>
+            <div className="filters">
+              <input
+                type="text"
+                placeholder="Search staff name or subject..."
+                value={filters.searchTerm}
+                onChange={(e) => setFilters({...filters, searchTerm: e.target.value})}
+                className="search-input"
+              />
+              <select 
+                value={filters.department} 
+                onChange={(e) => setFilters({...filters, department: e.target.value})}
+              >
+                <option value="All">All Departments</option>
+                {departments.map(dept => (
+                  <option key={dept} value={dept}>{dept}</option>
+                ))}
+              </select>
+            </div>
+            <FacultyTable data={filteredData} />
+          </div>
+        );
       case 'recommendations':
         return <Insights />;
       case 'reports':

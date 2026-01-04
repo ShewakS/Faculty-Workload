@@ -113,7 +113,7 @@ const DepartmentHeatmap = () => {
           </div>
           <div className="legend-item">
             <div className="color-box high"></div>
-            <span>High (>15)</span>
+            <span>High (≥15)</span>
           </div>
         </div>
       </div>

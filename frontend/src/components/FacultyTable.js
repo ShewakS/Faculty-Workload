@@ -24,7 +24,6 @@ const FacultyTable = ({ data }) => {
               <th>Lab Hours</th>
               <th>Workload Score</th>
               <th>Status</th>
-              <th>Data Type</th>
             </tr>
           </thead>
           <tbody>
@@ -37,7 +36,6 @@ const FacultyTable = ({ data }) => {
                 <td>{item.lab_hours}</td>
                 <td>{item.workload_score}</td>
                 <td>{item.status}</td>
-                <td>{item.data_type}</td>
               </tr>
             ))}
           </tbody>
